@@ -55,25 +55,39 @@ function layoutByCause() {
   console.log(counts);
 }
 
+function layoutAll() {
+  squares.forEach((sq, i) => {
+    sq.x = (i % perRow) * pitch;
+    sq.y = Math.floor(i / perRow) * pitch;
+    sq.color = "#3D6B45";
+  });
+}
+// Each view is a layout function
+const views = {
+  all: layoutAll,
+  cause: layoutByCause,
+};
+
+function showView(name) {
+  views[name]();  // sets the x, y and colour of every square
+  draw();         // repaints them
+}
+
+document.getElementById("btn-all").addEventListener("click", () => showView("all"));
+document.getElementById("btn-cause").addEventListener("click", () => showView("cause"));
+
+
 async function start() {
   const res = await fetch("koalas.json");
   const koalas = await res.json();
   console.log(koalas.length);
 
-  // 5 bars of 50 squares plus 4 gaps, and tall enough for the Sick bar.
   canvas.width = 5 * (50 * pitch) + 4 * 24;
   canvas.height = Math.ceil(9875 / 50) * pitch;
 
-  // One square per koala, starting as one block. layoutByCause() moves them into bars.
-  squares = koalas.map((koala, i) => ({
-    koala: koala,
-    x: (i % perRow) * pitch,
-    y: Math.floor(i / perRow) * pitch,
-    color: "#3D6B45",
-  }));
+  squares = koalas.map((koala) => ({ koala: koala, x: 0, y: 0, color: "#3D6B45" }));
 
-  layoutByCause();
-  draw();
+  showView("all");   // start as one block
 }
 
 start();
