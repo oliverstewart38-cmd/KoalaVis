@@ -1,17 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Koala admissions</title>
-</head>
-<body>
-
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Koala admissions</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
     <div>
-    <button id="btn-all">All</button>
-    <button id="btn-cause">By cause</button>
-  </div>
-  <canvas id="canvas" ></canvas>
-  <script src="main.js"></script>
-</body>
+      <button id="btn-all">All</button>
+      <button id="btn-cause">By cause</button>
+    </div>
+    <div id="stage">
+      <canvas id="canvas"></canvas>
+      <div id="labels"></div>
+    </div>
+    <script src="main.js"></script>
+  </body>
 </html>
