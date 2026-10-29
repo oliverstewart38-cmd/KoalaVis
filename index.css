@@ -1,9 +1,16 @@
-#stage { position: relative; display: inline-block; }
-canvas { display: block; }  /* removes a small gap that would knock the labels out of line */
+body { margin: 0; }
+
+#layout { display: flex; align-items: flex-start; gap: 24px; padding: 20px; }
+
+#stage { position: relative; flex: 1 1 auto; min-width: 0; }
+canvas { display: block; max-width: 100%; max-height: calc(100vh - 40px); }
+
+#side { width: 320px; flex-shrink: 0; }
+#buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .label {
   position: absolute;
-  transform: translateX(-50%);  /* so left is the label's middle */
+  transform: translateX(-50%);
   text-align: center;
   font-size: 14px;
   line-height: 1.3;

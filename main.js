@@ -42,8 +42,7 @@ const views = {
 
   outcomes: {
     layout: layoutByOutcomes,
-    caption: "August to October is the busiest stretch, with 8,296 admissions (36% of the total in a quarter of the year), all years combined. This aligns with the start of koala breeding season.",
-  },
+caption: "More than half of admissions (13,093, or 57%) have no recorded outcome, so these figures can't show how many koalas survive. Of the rest, 7,106 were released and 2,720 were found dead.",  },
 
 
 
@@ -73,8 +72,8 @@ function drawLabels() {
   labels.forEach((l) => {
     const el = document.createElement("div");
     el.classList.add("label");
-    el.style.left = (l.x / canvas.width) * 100 + "%";
-    el.style.top = (l.y / canvas.height) * 100 + "%";
+    el.style.left = canvas.offsetLeft + (l.x / canvas.width) * canvas.clientWidth + "px";
+    el.style.top = canvas.offsetTop + (l.y / canvas.height) * canvas.clientHeight + "px";
     el.textContent = l.name;
     const count = document.createElement("span");
     count.classList.add("count");
@@ -140,32 +139,28 @@ function layoutByOutcomes() {
   const barCols = 70;
   const barGap = 60;
 
-  // The floor of every bar. Sick is the tallest (9875 squares, 50 per row).
-  const bottom = Math.ceil(13093 / barCols) * pitch
+  // "No recorded outcome" is the tallest bar (13,093 squares, 70 per row).
+  const bottom = Math.ceil(13093 / barCols) * pitch;
 
-  // Tally of how many squares each bar has so far, 
   const counts = {};
 
   squares.forEach((sq) => {
-    const outcomes = sq.koala.outcomes;
-    const g = outcomes.findIndex((c) => c.name === outcomes); // bar number: Sick = 0, Vehicle strike = 2
-    const k = counts[outcomes] || 0; // this square's place within its bar
-    counts[outcomes] = k + 1;
+    const outcome = sq.koala.outcome;                         // singular, e.g. "Released"
+    const g = outcomes.findIndex((o) => o.name === outcome);  // the global array
+    const k = counts[outcome] || 0;
+    counts[outcome] = k + 1;
 
     const col = k % barCols;
     const row = Math.floor(k / barCols);
 
-    // Bar's left edge plus the column.
     sq.x = g * (barCols * pitch + barGap) + col * pitch;
-    // Counts up from the floor, so all the bars sit flat on the bottom.
     sq.y = bottom - (row + 1) * pitch;
     sq.color = outcomes[g].color;
   });
 
-
-   labels = outcomes.map((c, g) => ({
-    name: c.name,
-    count: counts[c.name],
+  labels = outcomes.map((o, g) => ({
+    name: o.name,
+    count: counts[o.name],
     x: g * (barCols * pitch + barGap) + (barCols * pitch) / 2,
     y: bottom + 8,
   }));
@@ -264,5 +259,43 @@ async function start() {
 
   showView("all");
 }
+
+// CLICKING ON SQUARE
+canvas.addEventListener("click", (event) => {
+  const rect = canvas.getBoundingClientRect();
+  // Convert from screen pixels to canvas pixels. This stays correct even if CSS resizes the canvas.
+  const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+  const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+
+  const hit = squares.find((sq) =>
+    x >= sq.x && x < sq.x + pitch && y >= sq.y && y < sq.y + pitch
+  );
+  if (hit) showCard(hit.koala);
+});
+
+
+
+function showCard(koala) {
+  const name = koala.name || "Unnamed koala";
+
+  // filter(Boolean) drops any null parts, so a missing suburb or LGA just disappears.
+  const parts = [koala.suburb, koala.lga].filter(Boolean);
+  const place = parts.length ? parts.join(", ") : "Location not recorded";
+
+  // Turns "2012-06-19" into "19 June 2012".
+  const when = new Date(koala.date).toLocaleDateString("en-AU", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
+  });
+
+  document.getElementById("card").textContent =
+    name + ". " + place + ". Cause: " + koala.cause + ". Outcome: " + koala.outcome + ". Admitted " + when + ".";
+}
+
+
+
+
+
+// SCALLING
+window.addEventListener("resize", drawLabels);
 
 start();
