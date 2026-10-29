@@ -23,7 +23,13 @@ const outcomes = [
   { name: "Found dead", color: "#B5443A" },
   { name: "No recorded outcome", color: "#B9B4A8" },
 ];
-
+const councils = [
+  { name: "Moreton Bay", lga: "Moreton Bay Regional Council", density: 256 },
+  { name: "Redland", lga: "Redland City Council", density: 317 },
+  { name: "Gold Coast", lga: "Gold Coast City Council", density: 511 },
+  { name: "Brisbane", lga: "Brisbane City Council", density: 992 },
+  { name: "Other areas", lga: null, density: null },
+];
 
 
 const views = {
@@ -40,14 +46,17 @@ const views = {
     caption: "August to October is the busiest stretch, with 8,296 admissions (36% of the total in a quarter of the year), all years combined. This aligns with the start of koala breeding season.",
   },
 
-  outcomes: {
+   outcomes: {
     layout: layoutByOutcomes,
-caption: "More than half of admissions (13,093, or 57%) have no recorded outcome, so these figures can't show how many koalas survive. Of the rest, 7,106 were released and 2,720 were found dead.",  },
+    caption: "More than half of admissions (13,093, or 57%) have no recorded outcome, so these figures can't show how many koalas survive. Of the rest, 7,106 were released and 2,720 were found dead.",
+  },
 
-
-
-
+  council: {
+    layout: layoutByCouncil,
+    caption: "Ordered from the least to the most densely populated council area, the share of admissions caused by vehicle strikes rises: 15.0% in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane. Four council areas cannot prove a cause, and population density only stands in for roads and traffic, which this data does not include.",
+  },
 };
+
 
 const size = 3;
 const gap = 1;
@@ -91,7 +100,7 @@ const causes = [
   { name: "Dog attack", color: "#4F6B7A" },
   { name: "Other injury", color: "#C9A982" },
 ];
-
+const causeOrder = ["Vehicle strike", "Dog attack", "Sick", "Other injury", "No cause recorded"];
 
 // Different modes:
 
@@ -216,6 +225,50 @@ function layoutByMonth() {
 }
 
 
+
+
+
+// BY COUNCIL
+
+function layoutByCouncil() {
+  const barCols = 50;
+  const barGap = 24;
+
+  const bottom = Math.ceil(7960 / barCols) * pitch;
+  const counts = {};
+
+
+  const ordered = [...squares].sort(
+  (a, b) => causeOrder.indexOf(a.koala.cause) - causeOrder.indexOf(b.koala.cause)
+);
+ordered.forEach((sq) => {
+    const council = sq.koala.lga;
+  const found = councils.findIndex((o) => o.lga === council);
+  const g = found === -1 ? councils.length - 1 : found;
+  const k = counts[g] || 0;
+  counts[g] = k + 1;
+  
+
+  
+
+
+    const col = k % barCols;
+    const row = Math.floor(k / barCols);
+const ci = causes.findIndex((c) => c.name === sq.koala.cause);
+    sq.x = g * (barCols * pitch + barGap) + col * pitch;
+    sq.y = bottom - (row + 1) * pitch;
+    
+sq.color = causes[ci].color;   });
+
+  labels = councils.map((o, g) => ({
+    name: o.name,
+    count: counts[g],
+    x: g * (barCols * pitch + barGap) + (barCols * pitch) / 2,
+    y: bottom + 8,
+  }));
+  console.log(counts);
+}
+
 function showView(name) {
   views[name].layout();
   const t0 = performance.now();
@@ -241,6 +294,10 @@ document
    document
   .getElementById("btn-outcomes")
   .addEventListener("click", () => showView("outcomes"));
+     document
+  .getElementById("btn-council")
+  .addEventListener("click", () => showView("council"));
+
 
 async function start() {
   const res = await fetch("koalas.json");
@@ -259,6 +316,7 @@ async function start() {
 
   showView("all");
 }
+
 
 // CLICKING ON SQUARE
 canvas.addEventListener("click", (event) => {
