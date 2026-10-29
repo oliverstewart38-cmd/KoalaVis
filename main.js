@@ -32,28 +32,53 @@ const councils = [
 ];
 
 
+// The names must match the cause text in koalas.json exactly.
+const causes = [
+  { name: "Sick", color: "#C68A2E" },
+  { name: "No cause recorded", color: "#B9B4A8" },
+  { name: "Vehicle strike", color: "#B5443A" },
+  { name: "Dog attack", color: "#4F6B7A" },
+  { name: "Other injury", color: "#C9A982" },
+];
+const causeOrder = ["Vehicle strike", "Dog attack", "Sick", "Other injury", "No cause recorded"];
+
+
 const views = {
   all: {
     layout: layoutAll,
     caption: "Every admission recorded between 2012 and 2025: 22,919 koalas, one square each.",
+    key: [{ name: "One admission", color: "#3D6B45" }],
+    
   },
   cause: {
     layout: layoutByCause,
     caption: "About 30% of admissions have no recorded cause. Vehicle strikes account for 4,123 admissions, or 18%. Each admission is counted once, under the first cause that applies: vehicle strike, dog attack, sick, then other injury.",
+ key: causes,
+ 
   },
   month: {
     layout: layoutByMonth,
     caption: "August to October is the busiest stretch, with 8,296 admissions (36% of the total in a quarter of the year), all years combined. This aligns with the start of koala breeding season.",
+  key: [{ name: "August to October", color: "#B5443A" }, { name: "Other months", color: "#3D6B45" }],
+  
+  
   },
 
    outcomes: {
     layout: layoutByOutcomes,
     caption: "More than half of admissions (13,093, or 57%) have no recorded outcome, so these figures can't show how many koalas survive. Of the rest, 7,106 were released and 2,720 were found dead.",
+  key: outcomes,
+  
+  
+  
   },
 
   council: {
     layout: layoutByCouncil,
     caption: "Ordered from the least to the most densely populated council area, the share of admissions caused by vehicle strikes rises: 15.0% in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane. Four council areas cannot prove a cause, and population density only stands in for roads and traffic, which this data does not include.",
+ key: causes,
+ 
+ 
   },
 };
 
@@ -61,6 +86,7 @@ const views = {
 const size = 3;
 const gap = 1;
 const pitch = size + gap;
+const FLOOR = Math.ceil(9875 / 50) * pitch;  // the tallest any view gets (the Sick bar in the cause view)
 const perRow = 150;
 
 let squares = [];
@@ -92,15 +118,6 @@ function drawLabels() {
   });
 }
 
-// The names must match the cause text in koalas.json exactly.
-const causes = [
-  { name: "Sick", color: "#C68A2E" },
-  { name: "No cause recorded", color: "#B9B4A8" },
-  { name: "Vehicle strike", color: "#B5443A" },
-  { name: "Dog attack", color: "#4F6B7A" },
-  { name: "Other injury", color: "#C9A982" },
-];
-const causeOrder = ["Vehicle strike", "Dog attack", "Sick", "Other injury", "No cause recorded"];
 
 // Different modes:
 
@@ -110,8 +127,8 @@ function layoutByCause() {
   const barCols = 50;
   const barGap = 24;
 
-  // The floor of every bar. Sick is the tallest (9875 squares, 50 per row).
-  const bottom = Math.ceil(9875 / barCols) * pitch;
+  // The floor of every bar, shared by all views.
+  const bottom = FLOOR;
 
   // Tally of how many squares each bar has so far, 
   const counts = {};
@@ -148,8 +165,7 @@ function layoutByOutcomes() {
   const barCols = 70;
   const barGap = 60;
 
-  // "No recorded outcome" is the tallest bar (13,093 squares, 70 per row).
-  const bottom = Math.ceil(13093 / barCols) * pitch;
+  const bottom = FLOOR;
 
   const counts = {};
 
@@ -181,13 +197,12 @@ function layoutByOutcomes() {
 function layoutAll() {
   squares.forEach((sq, i) => {
     sq.x = (i % perRow) * pitch;
-    sq.y = Math.floor(i / perRow) * pitch;
+    sq.y = FLOOR - (Math.floor(i / perRow) + 1) * pitch;
     sq.color = "#3D6B45";
   });
 
- const rows = Math.ceil(squares.length / perRow);
   labels = [
-    { name: "All admissions", count: squares.length, x: (perRow * pitch) / 2, y: rows * pitch + 8 },
+    { name: "All admissions", count: squares.length, x: (perRow * pitch) / 2, y: FLOOR + 8 },
   ];
 }
 
@@ -197,7 +212,7 @@ function layoutAll() {
 function layoutByMonth() {
   const barCols = 20;
   const barGap = 12;
-  const bottom = Math.ceil(2935 / barCols) * pitch;     // step 3
+  const bottom = FLOOR;
   const counts = {};
 
   squares.forEach((sq) => {
@@ -234,7 +249,7 @@ function layoutByCouncil() {
   const barCols = 50;
   const barGap = 24;
 
-  const bottom = Math.ceil(7960 / barCols) * pitch;
+  const bottom = FLOOR;
   const counts = {};
 
 
@@ -269,6 +284,28 @@ sq.color = causes[ci].color;   });
   console.log(counts);
 }
 
+
+
+
+function drawKey(items) {
+  const keyBox = document.getElementById("key");
+  keyBox.innerHTML = "";
+  items.forEach((item) => {
+    const row = document.createElement("div");
+    row.classList.add("key-row");
+
+    const swatch = document.createElement("span");
+    swatch.classList.add("swatch");
+    swatch.style.background = item.color;
+    const text = document.createElement("span");
+    text.textContent = item.name          // the item's name
+
+    row.appendChild(swatch);
+    row.appendChild(text);
+    keyBox.appendChild(row);
+  });
+}
+
 function showView(name) {
   views[name].layout();
   const t0 = performance.now();
@@ -276,7 +313,7 @@ function showView(name) {
   console.log("draw took", Math.round(performance.now() - t0), "ms");
   drawLabels();
   document.getElementById("caption").textContent = views[name].caption;
-
+drawKey(views[name].key)
 
 
 }
@@ -305,7 +342,7 @@ async function start() {
   console.log(koalas.length);
 
   canvas.width = 5 * (50 * pitch) + 4 * 24;
-  canvas.height = Math.ceil(9875 / 50) * pitch + 50;
+  canvas.height = FLOOR + 90;
 
   squares = koalas.map((koala) => ({
     koala: koala,
