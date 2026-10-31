@@ -306,16 +306,54 @@ function drawKey(items) {
   });
 }
 
-function showView(name) {
-  views[name].layout();
+
+
+let animating = false;
+
+function animate() {
   const t0 = performance.now();
+  let moving = false;
+
+  squares.forEach((sq) => {
+    const dx = sq.tx - sq.x;
+    const dy = sq.ty - sq.y;
+    if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+sq.x = sq.x + dx / 5;
+sq.y = sq.y + dy / 5;
+      moving = true;
+    } else {
+      sq.x = sq.tx;   // close enough: snap to the destination
+      sq.y = sq.ty;
+    }
+  });
+
   draw();
-  console.log("draw took", Math.round(performance.now() - t0), "ms");
+  console.log("frame took", Math.round(performance.now() - t0), "ms");
+
+  if (moving) requestAnimationFrame(animate);
+  else animating = false;
+}
+
+function startAnimation() {
+  if (!animating) {          // stops two loops running if you click twice quickly
+    animating = true;
+    requestAnimationFrame(animate);
+  }
+}
+
+
+
+function showView(name) {
+  squares.forEach((sq) => { sq.px = sq.x; sq.py = sq.y; });   
+  views[name].layout();                                       
+  squares.forEach((sq) => {
+    sq.tx = sq.x;  sq.ty = sq.y;                            
+    sq.x = sq.px;  sq.y = sq.py;                              
+  });
   drawLabels();
   document.getElementById("caption").textContent = views[name].caption;
-drawKey(views[name].key)
-
-
+  drawKey(views[name].key);
+  startAnimation();
 }
 document
   .getElementById("btn-all")
