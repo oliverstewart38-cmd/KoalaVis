@@ -78,8 +78,8 @@ caption: "Causes as recorded when each koala was first assessed. Vehicle strikes
 
   council: {
     layout: layoutByCouncil,
-caption: "Council areas run from the least to the most densely populated, left to right. Vehicle strikes account for 15.0% of admissions in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane, the densest area. The order of the first three is less certain, because 29% of Moreton Bay admissions have no recorded cause, against 10% to 14% elsewhere. 'Other areas' groups every other council and has no density figure, so it sits outside the comparison. Four areas show a pattern but cannot prove that density causes it, and density is only a stand-in for roads and traffic, which this data does not measure.", 
- 
+    caption: "Council areas run from the least to the most densely populated, left to right. Vehicle strikes account for 15.0% of admissions in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane, the densest area. The order of the first three is less certain, because 29% of Moreton Bay admissions have no recorded cause, against 10% to 14% elsewhere. 'Other areas' groups every other council and has no density figure, so it sits outside the comparison. Four areas show a pattern but cannot prove that density causes it, and density is only a stand-in for roads and traffic, which this data does not measure.",
+    key: stackKey,
   },
 };
 
