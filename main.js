@@ -46,13 +46,13 @@ const causeOrder = ["Vehicle strike", "Dog attack", "Sick", "Other injury", "No 
 const views = {
   all: {
     layout: layoutAll,
-    caption: "Every admission recorded between 2012 and 2025: 22,919 koalas, one square each.",
+    caption: "Every admission recorded from January 2012 to June 2025: 22,919 admissions, one square each.",
     key: [{ name: "One admission", color: "#3D6B45" }],
     
   },
   cause: {
     layout: layoutByCause,
-    caption: "About 30% of admissions have no recorded cause. Vehicle strikes account for 4,123 admissions, or 18%. Each admission is counted once, under the first cause that applies: vehicle strike, dog attack, sick, then other injury.",
+    caption: "Causes as recorded when each koala was first assessed. Vehicle strikes account for 4,123 admissions, or 18%. About 30% fall under 'Other or not recorded', which includes orphaned or threatened koalas and those with no cause recorded. Each admission is counted once, under the first cause that applies: vehicle strike, dog attack, sick, then other injury.",
  key: causes,
  
   },
@@ -66,7 +66,7 @@ const views = {
 
    outcomes: {
     layout: layoutByOutcomes,
-    caption: "More than half of admissions (13,093, or 57%) have no recorded outcome, so these figures can't show how many koalas survive. Of the rest, 7,106 were released and 2,720 were found dead.",
+    caption: "More than half of admissions (13,093, or 57%) have no recorded outcome, so these figures can't show how many koalas survive. Of the rest, 7,106 were released and 2,720 were recorded as dead when first assessed.",
   key: outcomes,
   
   
@@ -75,7 +75,7 @@ const views = {
 
   council: {
     layout: layoutByCouncil,
-    caption: "Ordered from the least to the most densely populated council area, the share of admissions caused by vehicle strikes rises: 15.0% in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane. Four council areas cannot prove a cause, and population density only stands in for roads and traffic, which this data does not include.",
+    caption: "Council areas run from the least to the most densely populated, left to right. The share of admissions caused by vehicle strikes rises with density: 15.0% in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane. Other areas are shown for completeness and are not part of the comparison. Four council areas cannot prove a cause, and density only stands in for roads and traffic, which this data does not include.",
  key: causes,
  
  
@@ -114,6 +114,12 @@ function drawLabels() {
     count.classList.add("count");
     count.textContent = l.count.toLocaleString();
     el.appendChild(count);
+    (l.notes || []).forEach((n) => {
+      const note = document.createElement("span");
+      note.classList.add("count");
+      note.textContent = n;
+      el.appendChild(note);
+    });
     labelBox.appendChild(el);
   });
 }
@@ -251,6 +257,7 @@ function layoutByCouncil() {
 
   const bottom = FLOOR;
   const counts = {};
+  const vehicle = {};
 
 
   const ordered = [...squares].sort(
@@ -262,9 +269,9 @@ ordered.forEach((sq) => {
   const g = found === -1 ? councils.length - 1 : found;
   const k = counts[g] || 0;
   counts[g] = k + 1;
-  
+  if (sq.koala.cause === "Vehicle strike") vehicle[g] = (vehicle[g] || 0) + 1;
 
-  
+
 
 
     const col = k % barCols;
@@ -278,6 +285,10 @@ sq.color = causes[ci].color;   });
   labels = councils.map((o, g) => ({
     name: o.name,
     count: counts[g],
+    notes: [
+      o.density ? o.density + " people per km²" : null,
+      (((vehicle[g] || 0) / counts[g]) * 100).toFixed(1) + "% vehicle strikes",
+    ].filter(Boolean),
     x: g * (barCols * pitch + barGap) + (barCols * pitch) / 2,
     y: bottom + 8,
   }));
