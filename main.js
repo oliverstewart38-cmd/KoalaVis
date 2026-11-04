@@ -4,6 +4,8 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const months = [
 
+  
+
 { name: "Jan", color: "#3D6B45" },
   { name: "Feb", color: "#3D6B45" },
   { name: "Mar", color: "#3D6B45" },
@@ -20,7 +22,7 @@ const months = [
 
 const outcomes = [
   { name: "Released", color: "#3D6B45" },
-  { name: "Found dead", color: "#B5443A" },
+{ name: "Recorded as dead", color: "#B5443A" },
   { name: "No recorded outcome", color: "#B9B4A8" },
 ];
 const councils = [
@@ -38,9 +40,11 @@ const causes = [
   { name: "No cause recorded", color: "#B9B4A8" },
   { name: "Vehicle strike", color: "#B5443A" },
   { name: "Dog attack", color: "#4F6B7A" },
-  { name: "Other injury", color: "#C9A982" },
+  { name: "Under threat", color: "#2B2B28" },
+  { name: "Other", color: "#C9A982" },
 ];
-const causeOrder = ["Vehicle strike", "Dog attack", "Sick", "Other injury", "No cause recorded"];
+const causeOrder = ["Vehicle strike", "Dog attack", "Sick", "Under threat", "Other", "No cause recorded"];
+const stackKey = [...causeOrder].reverse().map((n) => causes.find((c) => c.name === n));
 
 
 const views = {
@@ -52,8 +56,7 @@ const views = {
   },
   cause: {
     layout: layoutByCause,
-    caption: "Causes as recorded when each koala was first assessed. Vehicle strikes account for 4,123 admissions, or 18%. About 30% fall under 'Other or not recorded', which includes orphaned or threatened koalas and those with no cause recorded. Each admission is counted once, under the first cause that applies: vehicle strike, dog attack, sick, then other injury.",
- key: causes,
+caption: "Causes as recorded when each koala was first assessed. Vehicle strikes account for 4,123 admissions, or 18%. 'Other' (1,984) covers koalas injured in another way, orphaned, that had a fall, or were recorded as dead. About 19% (4,290) have no cause recorded. Each admission is counted once, under the first cause that applies: vehicle strike, dog attack, sick, under threat, then other.", key: causes,
  
   },
   month: {
@@ -75,9 +78,7 @@ const views = {
 
   council: {
     layout: layoutByCouncil,
-    caption: "Council areas run from the least to the most densely populated, left to right. The share of admissions caused by vehicle strikes rises with density: 15.0% in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane. Other areas are shown for completeness and are not part of the comparison. Four council areas cannot prove a cause, and density only stands in for roads and traffic, which this data does not include.",
- key: causes,
- 
+caption: "Council areas run from the least to the most densely populated, left to right. Vehicle strikes account for 15.0% of admissions in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane, the densest area. The order of the first three is less certain, because 29% of Moreton Bay admissions have no recorded cause, against 10% to 14% elsewhere. 'Other areas' groups every other council and has no density figure, so it sits outside the comparison. Four areas show a pattern but cannot prove that density causes it, and density is only a stand-in for roads and traffic, which this data does not measure.", 
  
   },
 };
@@ -98,6 +99,9 @@ function draw() {
     ctx.fillStyle = sq.color;
     ctx.fillRect(sq.x, sq.y, size, size);
   });
+
+  if (hovered) highlight(hovered, "#6B6A66");    // grey outline on hover
+if (selected) highlight(selected, "#2B2B28");  // dark outline once clicked
 }
 
 const labelBox = document.getElementById("labels");
@@ -359,8 +363,12 @@ function showView(name) {
   views[name].layout();                                       
   squares.forEach((sq) => {
     sq.tx = sq.x;  sq.ty = sq.y;                            
-    sq.x = sq.px;  sq.y = sq.py;                              
+    sq.x = sq.px;  sq.y = sq.py;                
+                  
   });
+
+document.querySelectorAll("#buttons button").forEach((b) => b.classList.toggle("active", b.id === "btn-" + name));
+
   drawLabels();
   document.getElementById("caption").textContent = views[name].caption;
   drawKey(views[name].key);
@@ -383,14 +391,20 @@ document
      document
   .getElementById("btn-council")
   .addEventListener("click", () => showView("council"));
-
+  
+document.getElementById("btn-random").addEventListener("click", () => {
+  const pick = squares[Math.floor(Math.random() * squares.length)];   // a random square: Math.random() times squares.length, rounded down
+  selected = pick;             // it gets the dark outline, like a clicked square
+  showCard(pick.koala);
+  if (!animating) draw();
+});
 
 async function start() {
   const res = await fetch("koalas.json");
   const koalas = await res.json();
   console.log(koalas.length);
 
-  canvas.width = 5 * (50 * pitch) + 4 * 24;
+canvas.width = 6 * (50 * pitch) + 5 * 24;
   canvas.height = FLOOR + 90;
 
   squares = koalas.map((koala) => ({
@@ -406,15 +420,27 @@ async function start() {
 
 // CLICKING ON SQUARE
 canvas.addEventListener("click", (event) => {
-  const rect = canvas.getBoundingClientRect();
-  // Convert from screen pixels to canvas pixels. This stays correct even if CSS resizes the canvas.
-  const x = (event.clientX - rect.left) * (canvas.width / rect.width);
-  const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+  const hit = nearestSquare(event);
+  if (hit) {
+    selected = hit;
+    showCard(hit.koala);
+    draw();
+  }
+});
 
-  const hit = squares.find((sq) =>
-    x >= sq.x && x < sq.x + pitch && y >= sq.y && y < sq.y + pitch
-  );
-  if (hit) showCard(hit.koala);
+canvas.addEventListener("mousemove", (event) => {
+  const hit = nearestSquare(event);
+  if (hit !== hovered) {              // only redraw when the hovered square changes
+    hovered = hit;
+    canvas.style.cursor = hit ? "pointer" : "default";
+    if (!animating) draw();           // while animating, the animation redraws every frame anyway
+  }
+});
+
+canvas.addEventListener("mouseleave", () => {
+  hovered = null;
+  canvas.style.cursor = "default";
+  if (!animating) draw();
 });
 
 
@@ -434,6 +460,55 @@ function showCard(koala) {
   document.getElementById("card").textContent =
     name + ". " + place + ". Cause: " + koala.cause + ". Outcome: " + koala.outcome + ". Admitted " + when + ".";
 }
+
+
+// HOVERRRINGGGG: 
+let hovered = null;   // the square under the mouse
+let selected = null;  // the square that was last clicked
+
+
+// Finds the square nearest the mouse, if one is within a few pixels. Returns null if not.
+function nearestSquare(event) {
+  const rect = canvas.getBoundingClientRect();
+  const scale = canvas.width / rect.width;                // canvas pixels per screen pixel
+  const x = (event.clientX - rect.left) * scale;
+  const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+  const maxDist = 10 * scale;                             // snap range: 10 screen pixels
+
+  let best = null;
+  let bestDist = maxDist;
+  squares.forEach((sq) => {
+    const dx = x - (sq.x + pitch / 2);   // the horizontal gap between the mouse and this square's centre
+    const dy = y - (sq.y + pitch / 2);   // the vertical gap
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < bestDist) {
+      best = sq;
+      bestDist = dist;
+    }
+  });
+  return best;
+}
+
+
+
+function highlight(sq, outline) {
+  ctx.fillStyle = sq.color;
+  ctx.fillRect(sq.x - 2, sq.y - 2, size + 4, size + 4);
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = outline;
+  ctx.strokeRect(sq.x - 2, sq.y - 2, size + 4, size + 4);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
