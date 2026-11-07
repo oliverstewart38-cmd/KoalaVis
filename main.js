@@ -195,7 +195,6 @@ function layoutByCause() {
     x: g * (barCols * pitch + barGap) + (barCols * pitch) / 2,
     y: bottom + 8,
   }));
-  console.log(counts);
 }
 
 // BY OUTCOMES
@@ -228,7 +227,6 @@ function layoutByOutcomes() {
     x: g * (barCols * pitch + barGap) + (barCols * pitch) / 2,
     y: bottom + 8,
   }));
-  console.log(counts);
 }
 
 //BY ALL
@@ -321,7 +319,6 @@ function layoutByCouncil() {
     x: g * (barCols * pitch + barGap) + (barCols * pitch) / 2,
     y: bottom + 8,
   }));
-  console.log(counts);
 }
 
 function drawKey(items) {
@@ -363,7 +360,6 @@ function animate() {
   });
 
   draw();
-  console.log("frame took", Math.round(performance.now() - t0), "ms");
 
   if (moving) requestAnimationFrame(animate);
   else animating = false;
@@ -452,7 +448,6 @@ document.getElementById("btn-random").addEventListener("click", () => {
 async function start() {
   const res = await fetch("koalas.json");
   const koalas = await res.json();
-  console.log(koalas.length);
 
   canvas.width = 6 * (50 * pitch) + 5 * 24;
   canvas.height = FLOOR + 90;
