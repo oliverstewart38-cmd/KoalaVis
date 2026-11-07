@@ -66,7 +66,7 @@ const views = {
   month: {
     layout: layoutByMonth,
     caption: "August to October is the busiest stretch, with 8,296 admissions (36% of the total in a quarter of the year). This aligns with the start of koala breeding season.",
-    notes: "Counts combine all years from January 2012 to June 2025. July to December cover 13 years and January to June cover 14, because 2025 stops at June, which if anything understates the peak.",
+    notes: "Counts combine all years from January 2012 to June 2025. July to December cover 13 years and January to June cover 14, because 2025 stops at June.",
     key: [{ name: "August to October", color: "#B5443A" }, { name: "Other months", color: "#3D6B45" }],
     headline: { number: "36%", label: "came in August to October" },
   },
@@ -82,7 +82,7 @@ const views = {
   council: {
     layout: layoutByCouncil,
     caption: "Council areas run from the least to the most densely populated, left to right. Vehicle strikes are 15.0% of admissions in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane, the densest area.",
-    notes: "Density is people per square kilometre at 30 June 2024 (Australian Bureau of Statistics). The order of the first three is less certain, because 29% of Moreton Bay admissions have no recorded cause, against 10% to 14% elsewhere. 'Other areas' groups every other council and has no density figure, so it sits outside the comparison. Four areas show a pattern but cannot prove that density causes it, and density is only a stand-in for roads and traffic, which this data does not measure.",
+    notes: "Density is people per square kilometre at 30 June 2024 (Australian Bureau of Statistics). The order of the first three is less certain, because 29% of Moreton Bay admissions have no recorded cause, against 10% to 14% elsewhere. 'Other areas' groups every other council and has no density figure, so it sits outside the comparison. Four areas show a pattern but cannot prove that density causes it, and density is only a stand-in for roads and traffic.",
     key: stackKey,
     headline: { number: "27.6%", label: "of Brisbane's admissions were vehicle strikes" },
   },
