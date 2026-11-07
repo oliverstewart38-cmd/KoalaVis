@@ -29,12 +29,11 @@ const councils = [
   { name: "Moreton Bay", lga: "Moreton Bay Regional Council", density: 256 },
   { name: "Redland", lga: "Redland City Council", density: 317 },
   { name: "Gold Coast", lga: "Gold Coast City Council", density: 511 },
-  { name: "Brisbane", lga: "Brisbane City Council", density: 992 },
+  { name: "Brisbane", lga: "Brisbane City Council", density: 1010 },
   { name: "Other areas", lga: null, density: null },
 ];
 
 
-// The names must match the cause text in koalas.json exactly.
 const causes = [
   { name: "Sick", color: "#C68A2E" },
   { name: "No cause recorded", color: "#B9B4A8" },
@@ -83,7 +82,7 @@ const views = {
   council: {
     layout: layoutByCouncil,
     caption: "Council areas run from the least to the most densely populated, left to right. Vehicle strikes are 15.0% of admissions in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane, the densest area.",
-    notes: "The order of the first three is less certain, because 29% of Moreton Bay admissions have no recorded cause, against 10% to 14% elsewhere. 'Other areas' groups every other council and has no density figure, so it sits outside the comparison. Four areas show a pattern but cannot prove that density causes it, and density is only a stand-in for roads and traffic, which this data does not measure.",
+    notes: "Density is people per square kilometre at 30 June 2024 (Australian Bureau of Statistics). The order of the first three is less certain, because 29% of Moreton Bay admissions have no recorded cause, against 10% to 14% elsewhere. 'Other areas' groups every other council and has no density figure, so it sits outside the comparison. Four areas show a pattern but cannot prove that density causes it, and density is only a stand-in for roads and traffic, which this data does not measure.",
     key: stackKey,
     headline: { number: "27.6%", label: "of Brisbane's admissions were vehicle strikes" },
   },
@@ -146,16 +145,16 @@ function layoutByCause() {
   const barCols = 50;
   const barGap = 24;
 
-  // The floor of every bar, shared by all views.
+  // The floor of every bar -shared by all views.
   const bottom = FLOOR;
 
-  // Tally of how many squares each bar has so far, 
+  // Tally of how many squares each bar has so far
   const counts = {};
 
   squares.forEach((sq) => {
     const cause = sq.koala.cause;
-    const g = causes.findIndex((c) => c.name === cause); // bar number: Sick = 0, Vehicle strike = 2
-    const k = counts[cause] || 0; // this square's place within its bar
+    const g = causes.findIndex((c) => c.name === cause); 
+    const k = counts[cause] || 0; 
     counts[cause] = k + 1;
 
     const col = k % barCols;
@@ -163,6 +162,7 @@ function layoutByCause() {
 
     // Bar's left edge plus the column.
     sq.x = g * (barCols * pitch + barGap) + col * pitch;
+
     // Counts up from the floor, so all the bars sit flat on the bottom.
     sq.y = bottom - (row + 1) * pitch;
     sq.color = causes[g].color;
@@ -189,7 +189,7 @@ function layoutByOutcomes() {
   const counts = {};
 
   squares.forEach((sq) => {
-    const outcome = sq.koala.outcome;                         // singular, e.g. "Released"
+    const outcome = sq.koala.outcome;                         
     const g = outcomes.findIndex((o) => o.name === outcome);  // the global array
     const k = counts[outcome] || 0;
     counts[outcome] = k + 1;
@@ -235,7 +235,7 @@ function layoutByMonth() {
   const counts = {};
 
   squares.forEach((sq) => {
-    const m = sq.koala.month;      // 1 to 12
+    const m = sq.koala.month;      
     const g = sq.koala.month -1;                 
     const k = counts[m] || 0;
     counts[m] = k + 1;
@@ -299,7 +299,7 @@ sq.color = causes[ci].color;   });
     name: o.name,
     count: counts[g],
     notes: [
-      o.density ? o.density + " people per km²" : null,
+      o.density ? o.density.toLocaleString("en-AU") + " people per km²" : null,
       (((vehicle[g] || 0) / counts[g]) * 100).toFixed(1) + "% vehicle strikes",
     ].filter(Boolean),
     x: g * (barCols * pitch + barGap) + (barCols * pitch) / 2,
@@ -322,7 +322,7 @@ function drawKey(items) {
     swatch.classList.add("swatch");
     swatch.style.background = item.color;
     const text = document.createElement("span");
-    text.textContent = item.name          // the item's name
+    text.textContent = item.name      
 
     row.appendChild(swatch);
     row.appendChild(text);
@@ -346,7 +346,7 @@ sq.x = sq.x + dx / 5;
 sq.y = sq.y + dy / 5;
       moving = true;
     } else {
-      sq.x = sq.tx;   // close enough: snap to the destination
+      sq.x = sq.tx;   
       sq.y = sq.ty;
     }
   });
@@ -359,13 +359,13 @@ sq.y = sq.y + dy / 5;
 }
 
 function startAnimation() {
-  if (!animating) {          // stops two loops running if you click twice quickly
+  if (!animating) {        
     animating = true;
     requestAnimationFrame(animate);
   }
 }
 
-
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function showView(name) {
   squares.forEach((sq) => { sq.px = sq.x; sq.py = sq.y; });   
@@ -376,15 +376,24 @@ function showView(name) {
                   
   });
 
-document.querySelectorAll("#buttons button").forEach((b) => b.classList.toggle("active", b.id === "btn-" + name));
-
+document.querySelectorAll("#buttons button").forEach((b) => {
+  const on = b.id === "btn-" + name;
+  b.classList.toggle("active", on);
+  b.setAttribute("aria-pressed", on);
+});
   drawLabels();
   document.getElementById("caption").textContent = views[name].caption;
   document.getElementById("notes-text").textContent = views[name].notes;
+  canvas.setAttribute("aria-label", views[name].headline.number + " " + views[name].headline.label + ". " + views[name].caption);
   drawKey(views[name].key);
   document.getElementById("headline-number").textContent = views[name].headline.number;
 document.getElementById("headline-label").textContent = views[name].headline.label;
+ if (reduceMotion) {
+  squares.forEach((sq) => { sq.x = sq.tx; sq.y = sq.ty; });   // jump straight there
+  draw();
+} else {
   startAnimation();
+}
 }
 document
   .getElementById("btn-all")
@@ -531,17 +540,17 @@ let pendingColor = null;  // the colour the mouse is over right now
 let focusTimer = null;
 
 function setFocus(color) {
-  if (color === pendingColor) return;   // same colour as before: nothing to do
+  if (color === pendingColor) return;   
   pendingColor = color;
-  clearTimeout(focusTimer);             // cancel any switch that was waiting
+  clearTimeout(focusTimer);            
   focusTimer = setTimeout(() => {
-    focusColor = pendingColor;          // null means nothing is picked out
+    focusColor = pendingColor;          
     if (!animating) draw();
   }, 100);                              // wait 100 ms for the mouse to settle
 }
 
 
-// Finds the square nearest the mouse, if one is within a few pixels. Returns null if not.
+// Finds the square nearest the mouse
 function nearestSquare(event) {
   const rect = canvas.getBoundingClientRect();
   const scale = canvas.width / rect.width;                // canvas pixels per screen pixel
@@ -572,18 +581,6 @@ function highlight(sq, outline) {
   ctx.strokeStyle = outline;
   ctx.strokeRect(sq.x - 2, sq.y - 2, size + 4, size + 4);
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
