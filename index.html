@@ -7,30 +7,33 @@
     <link rel="stylesheet" href="index.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
     
   </head>
 <body>
   <h1>Every koala admission, January 2012 to June 2025</h1>
 <p>Each square is one admission to a Queensland koala hospital. Choose a view to regroup them.</p>
-  <div id="layout">
-    <div id="stage">
-      <canvas id="canvas"></canvas>
-      <div id="labels"></div>
-    </div>
-
-    <div id="side">
   <div id="buttons">
     <button id="btn-all">All</button>
     <button id="btn-cause">By cause</button>
     <button id="btn-month">By month</button>
     <button id="btn-outcomes">By outcome</button>
     <button id="btn-council">By council area</button>
-  </div>
+  </div> 
+
+<div id="layout">
+    <div id="stage">
+<canvas id="canvas" role="img" aria-label="Koala admissions chart"></canvas>
+      <div id="labels"></div>
+  <div id="headline"><span id="headline-number"></span><span id="headline-label"></span></div>
+    </div>
+
+    <div id="side">
   <div id="key"></div>
-  <p id="caption"></p>
   <button id="btn-random">Show me a koala</button>
   <div id="card" aria-live="polite">Click a square to see that koala's record.</div>
-  </div>
+  <p id="caption"></p>
+  <details id="notes"><summary>About these numbers</summary><p id="notes-text"></p></details>
+</div>
   <script src="main.js"></script>
 </body>

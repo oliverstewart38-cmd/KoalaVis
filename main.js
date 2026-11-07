@@ -51,38 +51,43 @@ const views = {
   all: {
     layout: layoutAll,
     caption: "Every admission recorded from January 2012 to June 2025: 22,919 admissions, one square each.",
+    notes: "A koala can be admitted more than once, so each square is an admission, not a single koala.",
     key: [{ name: "One admission", color: "#3D6B45" }],
-    
-  },
-  cause: {
-    layout: layoutByCause,
-caption: "Causes as recorded when each koala was first assessed. Vehicle strikes account for 4,123 admissions, or 18%. 'Other' (1,984) covers koalas injured in another way, orphaned, that had a fall, or were recorded as dead. About 19% (4,290) have no cause recorded. Each admission is counted once, under the first cause that applies: vehicle strike, dog attack, sick, under threat, then other.", key: causes,
- 
-  },
-  month: {
-    layout: layoutByMonth,
-    caption: "August to October is the busiest stretch, with 8,296 admissions (36% of the total in a quarter of the year), all years combined. This aligns with the start of koala breeding season.",
-  key: [{ name: "August to October", color: "#B5443A" }, { name: "Other months", color: "#3D6B45" }],
-  
-  
+    headline: { number: "22,919", label: "admissions" },
   },
 
-   outcomes: {
+  cause: {
+    layout: layoutByCause,
+    caption: "Causes as recorded when each koala was first assessed. Vehicle strikes account for 4,123 admissions, or 18%, and about 19% (4,290) have no cause recorded.",
+    notes: "'Other' (1,984) covers koalas injured in another way, orphaned, that had a fall, or were recorded as dead. Each admission is counted once, under the first cause that applies: vehicle strike, dog attack, sick, under threat, then other.",
+    key: causes,
+    headline: { number: "18%", label: "were vehicle strikes" },
+  },
+
+  month: {
+    layout: layoutByMonth,
+    caption: "August to October is the busiest stretch, with 8,296 admissions (36% of the total in a quarter of the year). This aligns with the start of koala breeding season.",
+    notes: "Counts combine all years from January 2012 to June 2025. July to December cover 13 years and January to June cover 14, because 2025 stops at June, which if anything understates the peak.",
+    key: [{ name: "August to October", color: "#B5443A" }, { name: "Other months", color: "#3D6B45" }],
+    headline: { number: "36%", label: "came in August to October" },
+  },
+
+  outcomes: {
     layout: layoutByOutcomes,
-    caption: "More than half of admissions (13,093, or 57%) have no recorded outcome, so these figures can't show how many koalas survive. Of the rest, 7,106 were released and 2,720 were recorded as dead when first assessed.",
-  key: outcomes,
-  
-  
-  
+    caption: "More than half of admissions (13,093, or 57%) have no recorded outcome, so these figures can't show how many koalas survive. Of the rest, 7,106 were released and 2,720 were recorded as dead.",
+    notes: "'Recorded as dead' means the record shows the koala was dead when first assessed. Koalas that died later in care may sit in the grey bar, because the data has no final outcome for them.",
+    key: outcomes,
+    headline: { number: "57%", label: "have no recorded outcome" },
   },
 
   council: {
     layout: layoutByCouncil,
-    caption: "Council areas run from the least to the most densely populated, left to right. Vehicle strikes account for 15.0% of admissions in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane, the densest area. The order of the first three is less certain, because 29% of Moreton Bay admissions have no recorded cause, against 10% to 14% elsewhere. 'Other areas' groups every other council and has no density figure, so it sits outside the comparison. Four areas show a pattern but cannot prove that density causes it, and density is only a stand-in for roads and traffic, which this data does not measure.",
+    caption: "Council areas run from the least to the most densely populated, left to right. Vehicle strikes are 15.0% of admissions in Moreton Bay, 16.3% in Redland, 18.9% on the Gold Coast and 27.6% in Brisbane, the densest area.",
+    notes: "The order of the first three is less certain, because 29% of Moreton Bay admissions have no recorded cause, against 10% to 14% elsewhere. 'Other areas' groups every other council and has no density figure, so it sits outside the comparison. Four areas show a pattern but cannot prove that density causes it, and density is only a stand-in for roads and traffic, which this data does not measure.",
     key: stackKey,
+    headline: { number: "27.6%", label: "of Brisbane's admissions were vehicle strikes" },
   },
 };
-
 
 const size = 3;
 const gap = 1;
@@ -95,10 +100,12 @@ let labels = [];
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  squares.forEach((sq) => {
-    ctx.fillStyle = sq.color;
-    ctx.fillRect(sq.x, sq.y, size, size);
-  });
+squares.forEach((sq) => {
+  ctx.globalAlpha = !focusColor || sq.color === focusColor ? 1 : 0.25;
+  ctx.fillStyle = sq.color;
+  ctx.fillRect(sq.x, sq.y, size, size);
+});
+ctx.globalAlpha = 1;   // before the outlines are drawn
 
   if (hovered) highlight(hovered, "#6B6A66");    // grey outline on hover
 if (selected) highlight(selected, "#2B2B28");  // dark outline once clicked
@@ -113,14 +120,16 @@ function drawLabels() {
     el.classList.add("label");
     el.style.left = canvas.offsetLeft + (l.x / canvas.width) * canvas.clientWidth + "px";
     el.style.top = canvas.offsetTop + (l.y / canvas.height) * canvas.clientHeight + "px";
-    el.textContent = l.name;
-    const count = document.createElement("span");
+const title = document.createElement("span");
+title.classList.add("label-name");
+title.textContent = l.name;
+el.appendChild(title);    const count = document.createElement("span");
     count.classList.add("count");
     count.textContent = l.count.toLocaleString();
     el.appendChild(count);
     (l.notes || []).forEach((n) => {
       const note = document.createElement("span");
-      note.classList.add("count");
+note.classList.add("count", "note");
       note.textContent = n;
       el.appendChild(note);
     });
@@ -173,7 +182,7 @@ function layoutByCause() {
 
 function layoutByOutcomes() {
   const barCols = 70;
-  const barGap = 60;
+  const barGap = 100;
 
   const bottom = FLOOR;
 
@@ -221,7 +230,7 @@ function layoutAll() {
 
 function layoutByMonth() {
   const barCols = 20;
-  const barGap = 12;
+  const barGap = 32;
   const bottom = FLOOR;
   const counts = {};
 
@@ -257,7 +266,7 @@ function layoutByMonth() {
 
 function layoutByCouncil() {
   const barCols = 50;
-  const barGap = 24;
+  const barGap = 80;
 
   const bottom = FLOOR;
   const counts = {};
@@ -371,7 +380,10 @@ document.querySelectorAll("#buttons button").forEach((b) => b.classList.toggle("
 
   drawLabels();
   document.getElementById("caption").textContent = views[name].caption;
+  document.getElementById("notes-text").textContent = views[name].notes;
   drawKey(views[name].key);
+  document.getElementById("headline-number").textContent = views[name].headline.number;
+document.getElementById("headline-label").textContent = views[name].headline.label;
   startAnimation();
 }
 document
@@ -432,6 +444,7 @@ canvas.addEventListener("mousemove", (event) => {
   const hit = nearestSquare(event);
   if (hit !== hovered) {              // only redraw when the hovered square changes
     hovered = hit;
+    setFocus(hit ? hit.color : null);
     canvas.style.cursor = hit ? "pointer" : "default";
     if (!animating) draw();           // while animating, the animation redraws every frame anyway
   }
@@ -439,32 +452,93 @@ canvas.addEventListener("mousemove", (event) => {
 
 canvas.addEventListener("mouseleave", () => {
   hovered = null;
+  setFocus(null);
   canvas.style.cursor = "default";
   if (!animating) draw();
 });
 
 
+// Builds one row of the card: a label and a value.
+function cardRow(label, value) {
+  const r = document.createElement("div");
+  r.classList.add("card-row");
+
+  const l = document.createElement("span");
+  l.classList.add("card-label");
+  l.textContent = label;
+
+  const v = document.createElement("span");
+  v.classList.add("card-value");
+  v.textContent = value;
+
+  r.appendChild(l);
+  r.appendChild(v);
+  return r;
+}
 
 function showCard(koala) {
-  const name = koala.name || "Unnamed koala";
+  const card = document.getElementById("card");
+  card.innerHTML = "";   // clear the previous koala
 
-  // filter(Boolean) drops any null parts, so a missing suburb or LGA just disappears.
+  const name = document.createElement("h2");
+  name.textContent = koala.name || "No name recorded";
+  if (!koala.name) name.classList.add("unnamed");
+
   const parts = [koala.suburb, koala.lga].filter(Boolean);
-  const place = parts.length ? parts.join(", ") : "Location not recorded";
+  const place = document.createElement("p");
+  place.classList.add("card-place");
+  place.textContent = parts.length ? parts.join(", ") : "Location not recorded";
 
-  // Turns "2012-06-19" into "19 June 2012".
   const when = new Date(koala.date).toLocaleDateString("en-AU", {
     day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
   });
 
-  document.getElementById("card").textContent =
-    name + ". " + place + ". Cause: " + koala.cause + ". Outcome: " + koala.outcome + ". Admitted " + when + ".";
+  const cause = koala.cause === "No cause recorded" ? "Not recorded" : koala.cause;
+  const outcome = koala.outcome === "No recorded outcome" ? "Not recorded" : koala.outcome;
+
+  card.appendChild(name);
+  card.appendChild(place);
+  card.appendChild(cardRow("Cause", cause));
+  card.appendChild(cardRow("First assessed", when));
+  card.appendChild(cardRow("Outcome", outcome));
+}
+
+function resetCard() {
+  const card = document.getElementById("card");
+  card.innerHTML = "";
+
+  const name = document.createElement("h2");
+  name.classList.add("unnamed");
+  name.textContent = "No koala selected";
+
+  const place = document.createElement("p");
+  place.classList.add("card-place");
+  place.textContent = "Click a square, or press Show me a koala.";
+
+  card.appendChild(name);
+  card.appendChild(place);
+  card.appendChild(cardRow("Cause", "–"));
+  card.appendChild(cardRow("First assessed", "–"));
+  card.appendChild(cardRow("Outcome", "–"));
 }
 
 
 // HOVERRRINGGGG: 
 let hovered = null;   // the square under the mouse
 let selected = null;  // the square that was last clicked
+let focusColor = null;    // the colour that is currently picked out
+let pendingColor = null;  // the colour the mouse is over right now
+let focusTimer = null;
+
+function setFocus(color) {
+  if (color === pendingColor) return;   // same colour as before: nothing to do
+  pendingColor = color;
+  clearTimeout(focusTimer);             // cancel any switch that was waiting
+  focusTimer = setTimeout(() => {
+    focusColor = pendingColor;          // null means nothing is picked out
+    if (!animating) draw();
+  }, 100);                              // wait 100 ms for the mouse to settle
+}
 
 
 // Finds the square nearest the mouse, if one is within a few pixels. Returns null if not.
@@ -516,5 +590,5 @@ function highlight(sq, outline) {
 
 // SCALLING
 window.addEventListener("resize", drawLabels);
-
+resetCard();
 start();
